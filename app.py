@@ -18,15 +18,30 @@ def extract_eeg_features(edf_path):
     ch_names = raw.ch_names
     df = pd.DataFrame(data.T, columns=ch_names)
     df['time'] = times
-
+    '''
     # Reset the index for tsfresh compatibility (e.g., ensuring time sequential data)
     df_melted = df.melt(id_vars=['time'], var_name='channel', value_name='amplitude')
 
     # Add dummy id column (necessary for tsfresh, typically based on user-specific requirements)
     df_melted['id'] = 1  # Assuming only one signal for this example
+    '''
+    # Initialize an empty list for storing DataFrames
+    df_list = []
 
+    # Iterate over each channel
+    for i, channel_name in enumerate(raw.ch_names):
+        # Create a DataFrame for each channel
+        df = pd.DataFrame({
+            'id': i,  # Assign a unique ID to each channel
+            'time': times,
+            'value': data[i]
+        })
+        df_list.append(df)
+
+    # Concatenate all channel DataFrames into a single one
+    full_df = pd.concat(df_list, ignore_index=True)
     # Extract features using tsfresh
-    extracted_features = extract_features(df_melted, column_id='id', column_sort='time')
+    extracted_features = extract_features(full_df, column_id='id', column_sort='time', column_value='value')
 
     return extracted_features
 
