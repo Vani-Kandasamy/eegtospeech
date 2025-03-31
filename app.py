@@ -3,6 +3,7 @@ import mne
 import pandas as pd
 import numpy as np
 from tsfresh import extract_features
+from tsfresh.utilities.dataframe_functions import impute
 import joblib
 
 # Load the pre-trained model
@@ -52,7 +53,7 @@ def main():
 
         # Extract features from the uploaded EDF file
         features_df = extract_eeg_features("temp.edf")
-        
+
         st.write(features_df.shape)
         # Example mapping: assuming these were your labels
         label_mapping = {0: 'A', 1: 'C', 2:'F',3: 'H', 4:'J',5: 'M',6: 'P',7: 'S', 8: 'T',9: 'Y'}
