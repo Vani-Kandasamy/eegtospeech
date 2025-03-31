@@ -57,11 +57,11 @@ def main():
         class_indices = model.predict(features_df)
 
         # Map indices to actual labels
-        actual_labels = [label_mapping[index] for index in class_indices]
+        actual_label = [label_mapping[index] for index in class_indices]
 
 
         st.subheader("Model Prediction")
-        st.write(actual_labels)
+        st.write(actual_label)
 
 if __name__ == "__main__":
     main()
