@@ -14,7 +14,7 @@ def extract_eeg_features(edf_path):
     raw = mne.io.read_raw_edf(edf_path, preload=True)
 
     # Get data and create a DataFrame
-    data, times = raw.get_data(return_times=True)
+    data, times = raw[:]
     ch_names = raw.ch_names
     df = pd.DataFrame(data.T, columns=ch_names)
     df['time'] = times
