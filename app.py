@@ -54,7 +54,7 @@ def main():
         # Extract features from the uploaded EDF file
         features_df = extract_eeg_features("temp.edf")
 
-        st.write(features_df.shape)
+        #st.write(features_df.shape)
         # Example mapping: assuming these were your labels
         label_mapping = {0: 'A', 1: 'C', 2:'F',3: 'H', 4:'J',5: 'M',6: 'P',7: 'S', 8: 'T',9: 'Y'}
 
@@ -62,7 +62,11 @@ def main():
         class_indices = model.predict(features_df)
 
         #Take majority as class prediction
-        class_indices = max(set(class_indices), key=class_indices.count)
+        # Use numpy.unique with return_counts
+        # Use numpy.unique with return_counts
+        unique, counts = np.unique(class_indices, return_counts=True)
+        most_common_index = np.argmax(counts)
+        most_common_element = unique[most_common_index]
 
         # Map indices to actual labels
         actual_label = [label_mapping[index] for index in class_indices]
