@@ -13,8 +13,8 @@ def extract_eeg_features(edf_path):
     # Read the EDF file using MNE
     raw = mne.io.read_raw_edf(edf_path, preload=True)
 
-    # Get data and create a DataFrame
-    data, times = raw[:]
+    # Extract data and times
+    data, times = raw.get_data(return_times=True)
 
     # Initialize an empty list for storing DataFrames
     df_list = []
@@ -34,6 +34,9 @@ def extract_eeg_features(edf_path):
     # Extract features using tsfresh
     extracted_features = extract_features(full_df, column_id='id', column_sort='time', column_value='value')
 
+    # Impute missing values
+    extracted_features = impute(extracted_features)
+
     return extracted_features
 
 def main():
@@ -49,7 +52,8 @@ def main():
 
         # Extract features from the uploaded EDF file
         features_df = extract_eeg_features("temp.edf")
-
+        
+        st.write(features_df.shape)
         # Example mapping: assuming these were your labels
         label_mapping = {0: 'A', 1: 'C', 2:'F',3: 'H', 4:'J',5: 'M',6: 'P',7: 'S', 8: 'T',9: 'Y'}
 
