@@ -59,15 +59,18 @@ def main():
         # Extract features from the uploaded EDF file
         features_df = extract_eeg_features("temp.edf")
 
-        # Display extracted features
-        st.subheader("Extracted Features")
-        st.write(features_df)
+        # Example mapping: assuming these were your labels
+        label_mapping = {0: 'A', 1: 'C', 2:'F',3: 'H', 4:'J',5: 'M',6: 'P',7: 'S', 8: 'T',9: 'Y'}
 
         # Make prediction using the pre-trained model
-        prediction = model.predict(features_df)
+        class_indices = model.predict(features_df)
+
+        # Map indices to actual labels
+        actual_labels = [label_mapping[index] for index in class_indices]
+
 
         st.subheader("Model Prediction")
-        st.write(prediction)
+        st.write(actual_labels)
 
 if __name__ == "__main__":
     main()
