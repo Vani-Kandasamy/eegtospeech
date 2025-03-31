@@ -67,15 +67,15 @@ def main():
             st.subheader("Concatenated Model Prediction")
             st.write(concatenated_labels)
        
-        # Button to trigger the text-to-speech conversion
-        if st.button("Convert and Play"):
-            output_file = "output.mp3"
-            output_file = text_to_speech(concatenated_labels, output_file)
+            # Button to trigger the text-to-speech conversion
+            if st.button("Convert and Play"):
+                output_file = "output.mp3"
+                output_file = text_to_speech(concatenated_labels, output_file)
 
-            # Use Streamlit's audio component to play the audio file
-            audio_file = open(output_file, "rb")
-            audio_bytes = audio_file.read()
-            st.audio(audio_bytes, format="audio/mp3")
+                # Use Streamlit's audio component to play the audio file
+                audio_file = open(output_file, "rb")
+                audio_bytes = audio_file.read()
+                st.audio(audio_bytes, format="audio/mp3")
 
 if __name__ == "__main__":
     main()
