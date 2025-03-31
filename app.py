@@ -6,6 +6,8 @@ from tsfresh import extract_features
 from tsfresh.utilities.dataframe_functions import impute
 import joblib
 
+from gtts import gTTS
+
 # Load the pre-trained model
 MODEL_PATH = '/workspaces/eeg_speech/best_XGBoost_reg'
 model = joblib.load(MODEL_PATH)
@@ -28,6 +30,14 @@ def extract_eeg_features(edf_path):
     extracted_features = impute(extracted_features)
 
     return extracted_features
+
+def text_to_speech(text, output_file):
+    # Create a gTTS object
+    tts = gTTS(text=text, lang='en')
+
+    # Save the audio to a file
+    tts.save(output_file)
+    return output_file
 
 def main():
     st.title("EEG Feature Extraction and Prediction App")
@@ -56,6 +66,16 @@ def main():
             concatenated_labels = ''.join(all_labels)
             st.subheader("Concatenated Model Prediction")
             st.write(concatenated_labels)
+       
+        # Button to trigger the text-to-speech conversion
+        if st.button("Convert and Play"):
+            output_file = "output.mp3"
+            output_file = text_to_speech(concatenated_labels, output_file)
+
+            # Use Streamlit's audio component to play the audio file
+            audio_file = open(output_file, "rb")
+            audio_bytes = audio_file.read()
+            st.audio(audio_bytes, format="audio/mp3")
 
 if __name__ == "__main__":
     main()
