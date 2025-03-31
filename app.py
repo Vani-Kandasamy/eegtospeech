@@ -15,16 +15,7 @@ def extract_eeg_features(edf_path):
 
     # Get data and create a DataFrame
     data, times = raw[:]
-    ch_names = raw.ch_names
-    df = pd.DataFrame(data.T, columns=ch_names)
-    df['time'] = times
-    '''
-    # Reset the index for tsfresh compatibility (e.g., ensuring time sequential data)
-    df_melted = df.melt(id_vars=['time'], var_name='channel', value_name='amplitude')
 
-    # Add dummy id column (necessary for tsfresh, typically based on user-specific requirements)
-    df_melted['id'] = 1  # Assuming only one signal for this example
-    '''
     # Initialize an empty list for storing DataFrames
     df_list = []
 
