@@ -61,6 +61,9 @@ def main():
         # Make prediction using the pre-trained model
         class_indices = model.predict(features_df)
 
+        #Take majority as class prediction
+        class_indices = max(set(class_indices), key=class_indices.count)
+
         # Map indices to actual labels
         actual_label = [label_mapping[index] for index in class_indices]
 
