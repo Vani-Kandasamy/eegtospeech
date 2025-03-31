@@ -11,31 +11,20 @@ MODEL_PATH = '/workspaces/eeg_speech/best_XGBoost_reg'
 model = joblib.load(MODEL_PATH)
 
 def extract_eeg_features(edf_path):
-    # Read the EDF file using MNE
     raw = mne.io.read_raw_edf(edf_path, preload=True)
-
-    # Extract data and times
     data, times = raw.get_data(return_times=True)
-
-    # Initialize an empty list for storing DataFrames
     df_list = []
 
-    # Iterate over each channel
     for i, channel_name in enumerate(raw.ch_names):
-        # Create a DataFrame for each channel
         df = pd.DataFrame({
-            'id': i,  # Assign a unique ID to each channel
+            'id': i,
             'time': times,
             'value': data[i]
         })
         df_list.append(df)
 
-    # Concatenate all channel DataFrames into a single one
     full_df = pd.concat(df_list, ignore_index=True)
-    # Extract features using tsfresh
     extracted_features = extract_features(full_df, column_id='id', column_sort='time', column_value='value')
-
-    # Impute missing values
     extracted_features = impute(extracted_features)
 
     return extracted_features
@@ -43,37 +32,30 @@ def extract_eeg_features(edf_path):
 def main():
     st.title("EEG Feature Extraction and Prediction App")
 
-    # Upload the EDF file
-    uploaded_file = st.file_uploader("Upload an EEG EDF file", type="edf")
+    # Upload multiple EDF files
+    uploaded_files = st.file_uploader("Upload EEG EDF files (select in desired order)", type="edf", accept_multiple_files=True)
 
-    if uploaded_file is not None:
-        # Save the uploaded file to a temporary location
-        with open("temp.edf", "wb") as f:
-            f.write(uploaded_file.getbuffer())
+    # Check if there are any uploaded files
+    if uploaded_files:
+        if st.button("Start Feature Extraction and Prediction"):
+            label_mapping = {0: 'A', 1: 'C', 2: 'F', 3: 'H', 4: 'J', 5: 'M', 6: 'P', 7: 'S', 8: 'T', 9: 'Y'}
+            all_labels = []
 
-        # Extract features from the uploaded EDF file
-        features_df = extract_eeg_features("temp.edf")
+            for i, uploaded_file in enumerate(uploaded_files):
+                with open(f"temp_{i}.edf", "wb") as f:
+                    f.write(uploaded_file.getbuffer())
 
-        #st.write(features_df.shape)
-        # Example mapping: assuming these were your labels
-        label_mapping = {0: 'A', 1: 'C', 2:'F',3: 'H', 4:'J',5: 'M',6: 'P',7: 'S', 8: 'T',9: 'Y'}
+                features_df = extract_eeg_features(f"temp_{i}.edf")
+                class_indices = model.predict(features_df)
+                unique, counts = np.unique(class_indices, return_counts=True)
+                most_common_index = np.argmax(counts)
+                most_common_element = unique[most_common_index]
+                actual_label = label_mapping[most_common_element]
+                all_labels.append(actual_label)
 
-        # Make prediction using the pre-trained model
-        class_indices = model.predict(features_df)
-
-        #Take majority as class prediction
-        # Use numpy.unique with return_counts
-        # Use numpy.unique with return_counts
-        unique, counts = np.unique(class_indices, return_counts=True)
-        most_common_index = np.argmax(counts)
-        most_common_element = unique[most_common_index]
-
-        # Map indices to actual labels
-        actual_label = label_mapping[most_common_element]
-
-
-        st.subheader("Model Prediction")
-        st.write(actual_label)
+            concatenated_labels = ''.join(all_labels)
+            st.subheader("Concatenated Model Prediction")
+            st.write(concatenated_labels)
 
 if __name__ == "__main__":
     main()
