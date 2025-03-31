@@ -69,7 +69,7 @@ def main():
         most_common_element = unique[most_common_index]
 
         # Map indices to actual labels
-        actual_label = [label_mapping[index] for index in most_common_element]
+        actual_label = label_mapping[most_common_element]
 
 
         st.subheader("Model Prediction")
