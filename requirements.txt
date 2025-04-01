@@ -9,3 +9,4 @@ scipy == 1.14.1
 xgboost
 gTTS
 setuptools
+os

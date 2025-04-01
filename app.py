@@ -9,8 +9,28 @@ import joblib
 from gtts import gTTS
 from io import BytesIO
 
+
+import os
+
 # Load the pre-trained model
 MODEL_PATH = '/workspaces/eegtospeech/best_XGBoost_reg'
+
+
+def load_model(model_path):
+    try:
+        if not os.path.exists(model_path):
+            st.error(f"The model file at {model_path} does not exist.")
+            return None
+
+        model = joblib.load(model_path)
+        return model
+
+    except FileNotFoundError:
+        st.error("The specified model file could not be found.")
+        return None
+    except Exception as e:
+        st.error(f"An unexpected error occurred: {e}")
+        return None
 model = joblib.load(MODEL_PATH)
 
 def extract_eeg_features(edf_path):
@@ -56,6 +76,8 @@ def main():
     # Upload multiple EDF files
     uploaded_files = st.file_uploader("Upload EEG EDF files (select in desired order)", type="edf", accept_multiple_files=True)
     text = ''
+    # Load the model
+    model = load_model(MODEL_PATH)
     # Check if there are any uploaded files
     if uploaded_files:
         if st.button("Start Feature Extraction and Prediction"):
