@@ -76,7 +76,7 @@ def main():
     uploaded_files = st.file_uploader("Upload EEG EDF files (select in desired order)", type="edf", accept_multiple_files=True)
     text = ''
     # Load the model
-    model = load_model(MODEL_PATH)
+    model = load_model()
     # Check if there are any uploaded files
     if uploaded_files:
         if st.button("Start Feature Extraction and Prediction"):
