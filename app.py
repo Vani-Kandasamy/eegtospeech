@@ -59,7 +59,7 @@ def main():
             st.subheader("Concatenated Model Prediction")
             st.write(concatenated_labels)
             text = concatenated_labels
-     st.write(text)
+    st.write(text)
     if text and st.button("Convert and Play"):
        
         try:
