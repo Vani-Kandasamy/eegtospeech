@@ -1,4 +1,4 @@
-streamlit==1.41.0
+streamlit
 mne==1.9.0
 tsfresh==0.21.0
 scikit-learn==1.6.1
