@@ -13,12 +13,11 @@ from io import BytesIO
 
 import os
 
-IMAGE_ADDRESS = "https://static.vecteezy.com/system/resources/thumbnails/035/989/570/small/human-brain-with-wave-lines-power-of-human-mind-brain-wave-activity-complex-neurology-and-brain-related-concepts-and-ideas-vector.jpg"
+IMAGE_ADDRESS = "https://www.tsukuba.ac.jp/en/research-news/images/p20230904180000.jpg"
 
-# web app
-st.title("BrainTalk")
 
-st.image(IMAGE_ADDRESS, caption = "IBD Nutrition Importance")
+
+st.image(IMAGE_ADDRESS, caption = "EEG to Speech")
 
 def load_model():
     try:
@@ -78,7 +77,8 @@ def text_to_speech(text):
         st.error(f"An error occurred: {e}")
 
 def main():
-    st.title("EEG Feature Extraction and Prediction App")
+    # web app
+    st.title("BrainTalk")
 
     # Upload multiple EDF files
     uploaded_files = st.file_uploader("Upload EEG EDF files (select in desired order)", type="edf", accept_multiple_files=True)
