@@ -32,6 +32,24 @@ def extract_eeg_features(edf_path):
 
     return extracted_features
 
+def text_to_speech(text):
+    try:
+        # Convert text to speech
+        tts = gTTS(text=text, lang='en')
+
+        # Save to a bytes buffer
+        audio_buffer = BytesIO()
+        tts.write_to_fp(audio_buffer)
+
+        # Reset buffer position to start
+        audio_buffer.seek(0)
+
+        # Play the audio using Streamlit
+        st.audio(audio_buffer, format="audio/mp3")
+
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
+
 def main():
     st.title("EEG Feature Extraction and Prediction App")
 
@@ -61,23 +79,7 @@ def main():
             st.write(concatenated_labels)
             text = concatenated_labels
     st.write(text)
-    if text and st.button("Convert and Play"):
-       
-        try:
-            # Convert text to speech
-            tts = gTTS(text=text, lang='en')
-            # Save to a bytes buffer
-            audio_buffer = BytesIO()
-            tts.write_to_fp(audio_buffer)
-
-            # Reset buffer position to start
-            audio_buffer.seek(0)
-
-            # Play the audio (in-app)
-            st.audio(audio_buffer, format="audio/mp3")
-
-        except Exception as e:
-            st.error(f"An error occurred: {e}")
-
+        if text and st.button("Convert and Play"):
+            text_to_speech(text)
 if __name__ == "__main__":
     main()
