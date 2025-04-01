@@ -7,6 +7,7 @@ from tsfresh.utilities.dataframe_functions import impute
 import joblib
 
 from gtts import gTTS
+from io import BytesIO
 
 # Load the pre-trained model
 MODEL_PATH = '/workspaces/eeg_speech/best_XGBoost_reg'
