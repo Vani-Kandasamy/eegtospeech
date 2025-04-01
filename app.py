@@ -61,21 +61,21 @@ def main():
             text = concatenated_labels
        
     if text and st.button("Convert and Play"):
-    try:
-        # Convert text to speech
-        tts = gTTS(text=text, lang='en')
-        # Save to a bytes buffer
-        audio_buffer = BytesIO()
-        tts.write_to_fp(audio_buffer)
+        try:
+            # Convert text to speech
+            tts = gTTS(text=text, lang='en')
+            # Save to a bytes buffer
+            audio_buffer = BytesIO()
+            tts.write_to_fp(audio_buffer)
 
-        # Reset buffer position to start
-        audio_buffer.seek(0)
+            # Reset buffer position to start
+            audio_buffer.seek(0)
 
-        # Play the audio (in-app)
-        st.audio(audio_buffer, format="audio/mp3")
+            # Play the audio (in-app)
+            st.audio(audio_buffer, format="audio/mp3")
 
-    except Exception as e:
-        st.error(f"An error occurred: {e}")
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
 
 if __name__ == "__main__":
     main()
