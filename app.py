@@ -31,14 +31,6 @@ def extract_eeg_features(edf_path):
 
     return extracted_features
 
-def text_to_speech(text, output_file):
-    # Create a gTTS object
-    tts = gTTS(text=text, lang='en')
-
-    # Save the audio to a file
-    tts.save(output_file)
-    return output_file
-
 def main():
     st.title("EEG Feature Extraction and Prediction App")
 
@@ -67,15 +59,23 @@ def main():
             st.subheader("Concatenated Model Prediction")
             st.write(concatenated_labels)
        
-            # Button to trigger the text-to-speech conversion
             if st.button("Convert and Play"):
-                output_file = "output.mp3"
-                output_file = text_to_speech(concatenated_labels, output_file)
+                
+                try:
+                        # Convert text to speech
+                        tts = gTTS(text=concatenated_labels, lang='en')
+                        # Save to a bytes buffer
+                        audio_buffer = BytesIO()
+                        tts.write_to_fp(audio_buffer)
 
-                # Use Streamlit's audio component to play the audio file
-                audio_file = open(output_file, "rb")
-                audio_bytes = audio_file.read()
-                st.audio(audio_bytes, format="audio/mp3")
+                        # Reset buffer position to start
+                        audio_buffer.seek(0)
+
+                        # Play the audio (in-app)
+                        st.audio(audio_buffer, format="audio/mp3")
+
+                except Exception as e:
+                        st.error(f"An error occurred: {e}")
 
 if __name__ == "__main__":
     main()
