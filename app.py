@@ -36,7 +36,7 @@ def main():
 
     # Upload multiple EDF files
     uploaded_files = st.file_uploader("Upload EEG EDF files (select in desired order)", type="edf", accept_multiple_files=True)
-
+    text = ''
     # Check if there are any uploaded files
     if uploaded_files:
         if st.button("Start Feature Extraction and Prediction"):
@@ -58,24 +58,24 @@ def main():
             concatenated_labels = ''.join(all_labels)
             st.subheader("Concatenated Model Prediction")
             st.write(concatenated_labels)
+            text = concatenated_labels
        
-            if st.button("Convert and Play"):
-                
-                try:
-                    # Convert text to speech
-                    tts = gTTS(text=concatenated_labels, lang='en')
-                    # Save to a bytes buffer
-                    audio_buffer = BytesIO()
-                    tts.write_to_fp(audio_buffer)
+    if text and st.button("Convert and Play"):
+    try:
+        # Convert text to speech
+        tts = gTTS(text=text, lang='en')
+        # Save to a bytes buffer
+        audio_buffer = BytesIO()
+        tts.write_to_fp(audio_buffer)
 
-                    # Reset buffer position to start
-                    audio_buffer.seek(0)
-                        
-                    # Play the audio (in-app)
-                    st.audio(audio_buffer, format="audio/mp3")
+        # Reset buffer position to start
+        audio_buffer.seek(0)
 
-                except Exception as e:
-                        st.error(f"An error occurred: {e}")
+        # Play the audio (in-app)
+        st.audio(audio_buffer, format="audio/mp3")
+
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
 
 if __name__ == "__main__":
     main()
