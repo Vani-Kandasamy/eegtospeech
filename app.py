@@ -12,26 +12,25 @@ from io import BytesIO
 
 import os
 
-# Load the pre-trained model
-MODEL_PATH = '/workspaces/eegtospeech/best_XGBoost_reg'
-
-
-def load_model(model_path):
+def load_model():
     try:
-        if not os.path.exists(model_path):
-            st.error(f"The model file at {model_path} does not exist.")
+        model_path = Path(__file__).parent / "best_XGBoost_reg"
+        st.write(f"Checking model path: {model_path}")
+
+        if not model_path.exists():
+            st.error(f"Model file does not exist at: {model_path}")
             return None
 
-        model = joblib.load(model_path)
-        return model
+        if not os.access(str(model_path), os.R_OK):
+            st.error(f"No read permission for the file: {model_path}")
+            return None
 
-    except FileNotFoundError:
-        st.error("The specified model file could not be found.")
-        return None
+        model = joblib.load(str(model_path))
+        st.success("Model loaded successfully.")
+        return model
     except Exception as e:
-        st.error(f"An unexpected error occurred: {e}")
+        st.error(f"Error loading model: {e}")
         return None
-model = joblib.load(MODEL_PATH)
 
 def extract_eeg_features(edf_path):
     raw = mne.io.read_raw_edf(edf_path, preload=True)
