@@ -79,7 +79,7 @@ def main():
             st.write(concatenated_labels)
             text = concatenated_labels
         st.write(text)
-        if text and st.button("Convert and Play"):
+        if text:
             text_to_speech(text)
 
 if __name__ == "__main__":
