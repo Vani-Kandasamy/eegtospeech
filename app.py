@@ -10,7 +10,7 @@ from gtts import gTTS
 from io import BytesIO
 
 # Load the pre-trained model
-MODEL_PATH = '/workspaces/eegtospeech/best_XGBoost_regg'
+MODEL_PATH = '/workspaces/eegtospeech/best_XGBoost_reg'
 model = joblib.load(MODEL_PATH)
 
 def extract_eeg_features(edf_path):
