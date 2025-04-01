@@ -13,10 +13,17 @@ from io import BytesIO
 
 import os
 
+IMAGE_ADDRESS = "https://static.vecteezy.com/system/resources/thumbnails/035/989/570/small/human-brain-with-wave-lines-power-of-human-mind-brain-wave-activity-complex-neurology-and-brain-related-concepts-and-ideas-vector.jpg"
+
+# web app
+st.title("BrainTalk")
+
+st.image(IMAGE_ADDRESS, caption = "IBD Nutrition Importance")
+
 def load_model():
     try:
         model_path = Path(__file__).parent / "best_XGBoost_reg"
-        st.write(f"Checking model path: {model_path}")
+        #st.write(f"Checking model path: {model_path}")
 
         if not model_path.exists():
             st.error(f"Model file does not exist at: {model_path}")
@@ -27,7 +34,7 @@ def load_model():
             return None
 
         model = joblib.load(str(model_path))
-        st.success("Model loaded successfully.")
+        #st.success("Model loaded successfully.")
         return model
     except Exception as e:
         st.error(f"Error loading model: {e}")
@@ -80,7 +87,7 @@ def main():
     model = load_model()
     # Check if there are any uploaded files
     if uploaded_files:
-        if st.button("Start Feature Extraction and Prediction"):
+        if st.button("Express Waves"):
             label_mapping = {0: 'A', 1: 'C', 2: 'F', 3: 'H', 4: 'J', 5: 'M', 6: 'P', 7: 'S', 8: 'T', 9: 'Y'}
             all_labels = []
 
@@ -97,10 +104,10 @@ def main():
                 all_labels.append(actual_label)
 
             concatenated_labels = ''.join(all_labels)
-            st.subheader("Concatenated Model Prediction")
+            st.subheader("Voice of the Mind")
             st.write(concatenated_labels)
             text = concatenated_labels
-        st.write(text)
+        #st.write(text)
         if text:
             text_to_speech(text)
 
