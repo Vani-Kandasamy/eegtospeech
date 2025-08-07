@@ -7,7 +7,7 @@ from tsfresh.utilities.dataframe_functions import impute
 import joblib
 
 # Load the pre-trained model
-MODEL_PATH = '/workspaces/eeg_speech/best_XGBoost_reg'
+MODEL_PATH = '/workspaces/eegtospeech/best_XGBoost_reg'
 model = joblib.load(MODEL_PATH)
 
 def extract_eeg_features(edf_path):
