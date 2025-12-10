@@ -6,13 +6,13 @@ from tsfresh import extract_features
 from tsfresh.utilities.dataframe_functions import impute
 import joblib
 from pathlib import Path
-
 from gtts import gTTS
 from io import BytesIO
-
-
 import os
 
+import requests
+
+# Constants
 IMAGE_ADDRESS = "https://www.tsukuba.ac.jp/en/research-news/images/p20230904180000.jpg"
 
 # Page config
@@ -33,6 +33,139 @@ page = st.sidebar.radio("Go to", ["Home", "About Us", "FAQ & Resources"])
 
 # Header - always show the header
 st.image(IMAGE_ADDRESS, caption="EEG to Speech Conversion")
+
+def load_model():
+    try:
+        model_path = Path(__file__).parent / "best_XGBoost_reg"
+        if not model_path.exists():
+            st.error(f"Model file does not exist at: {model_path}")
+            return None
+        if not os.access(str(model_path), os.R_OK):
+            st.error(f"No read permission for the file: {model_path}")
+            return None
+        return joblib.load(str(model_path))
+    except Exception as e:
+        st.error(f"Error loading model: {e}")
+        return None
+
+def extract_eeg_features(edf_path):
+    raw = mne.io.read_raw_edf(edf_path, preload=True)
+    data, times = raw.get_data(return_times=True)
+    df_list = []
+
+    for i, channel_name in enumerate(raw.ch_names):
+        df = pd.DataFrame({
+            'id': i,
+            'time': times,
+            'value': data[i]
+        })
+        df_list.append(df)
+
+    full_df = pd.concat(df_list, ignore_index=True)
+    extracted_features = extract_features(full_df, column_id='id', column_sort='time', column_value='value')
+    return impute(extracted_features)
+
+def text_to_speech(text):
+    try:
+        tts = gTTS(text=text, lang='en')
+        audio_buffer = BytesIO()
+        tts.write_to_fp(audio_buffer)
+        audio_buffer.seek(0)
+        st.audio(audio_buffer, format="audio/mp3")
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
+
+def download_edf_file(url, filename):
+    try:
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
+        with open(filename, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+        return True
+    except Exception as e:
+        st.error(f"Error downloading {filename}: {e}")
+        return False
+
+def show_home_page():
+    st.title("BrainTalk")
+    
+    # Upload multiple EDF files
+    st.subheader("1. Upload your EEG data")
+    uploaded_files = st.file_uploader("Select EDF files (in desired order)", 
+                                    type="edf", 
+                                    accept_multiple_files=True,
+                                    key="file_uploader")
+    
+    # Sample EDF files download section
+    st.subheader("2. Or download sample EDF files")
+    st.write("Click on the buttons below to download sample EDF files for testing:")
+    
+    # Dictionary of sample EDF files with their Google Drive links
+    edf_links = {
+        'A': 'https://drive.google.com/uc?export=download&id=1ckD6gt7Z_Lkttg6kUv90ZbLQlanLP6NA',
+        'C': 'https://drive.google.com/uc?export=download&id=1otwd0q5RWLbZZSW3BT7Fnt06cdMZO9FA',
+        'F': 'https://drive.google.com/uc?export=download&id=1TGfrtfbLxvOlhQZrN-quUQmyP30X2rMh',
+        'H': 'https://drive.google.com/uc?export=download&id=1MGTMQTeZXIvWEwrZM5GOoc0tlA-Ahqsg',
+        'J': 'https://drive.google.com/uc?export=download&id=1revVfd-cHpLdvvyogTQdBGaNaosYUDpV',
+        'M': 'https://drive.google.com/uc?export=download&id=1tc4Bv1Si11FFI_KsGWOnqTXvO6GEll61',
+        'P': 'https://drive.google.com/uc?export=download&id=1ODZ0mc2LdHAG-BtmPYx8gyAasuhLlJN-',
+        'S': 'https://drive.google.com/uc?export=download&id=1PsHjwSRjchDysKEpMv4QCH7VF6VuQkR6',
+        'T': 'https://drive.google.com/uc?export=download&id=1lPiy9bhZ9bSQcW75wlZl6WUNEU9yH8Cw',
+        'Y': 'https://drive.google.com/uc?export=download&id=1rlFXtwMHK1tJjsetPfFa42cVo0xMn1ea'
+    }
+    
+    # Create a row of download buttons
+    cols = st.columns(5)
+    for i, (letter, url) in enumerate(edf_links.items()):
+        with cols[i % 5]:
+            if st.button(f"Download '{letter}'", 
+                        key=f"btn_{letter}",
+                        use_container_width=True):
+                with st.spinner(f"Downloading {letter}.edf..."):
+                    if download_edf_file(url, f"sample_{letter}.edf"):
+                        st.success(f"Downloaded sample_{letter}.edf")
+                    else:
+                        st.error("Download failed")
+    
+    st.markdown("---")
+    
+    # Load the model
+    model = load_model()
+    
+    # Process uploaded files
+    if uploaded_files:
+        if st.button("Process EEG Data", type="primary"):
+            with st.spinner("Processing EEG data..."):
+                label_mapping = {0: 'A', 1: 'C', 2: 'F', 3: 'H', 4: 'J', 
+                                5: 'M', 6: 'P', 7: 'S', 8: 'T', 9: 'Y'}
+                all_labels = []
+
+                for i, uploaded_file in enumerate(uploaded_files):
+                    # Save the uploaded file
+                    with open(f"temp_{i}.edf", "wb") as f:
+                        f.write(uploaded_file.getbuffer())
+                    
+                    try:
+                        features_df = extract_eeg_features(f"temp_{i}.edf")
+                        class_indices = model.predict(features_df)
+                        unique, counts = np.unique(class_indices, return_counts=True)
+                        most_common_index = np.argmax(counts)
+                        most_common_element = unique[most_common_index]
+                        all_labels.append(label_mapping[most_common_element])
+                        
+                        # Clean up the temporary file
+                        os.remove(f"temp_{i}.edf")
+                        
+                    except Exception as e:
+                        st.error(f"Error processing file {uploaded_file.name}: {str(e)}")
+                        continue
+
+                if all_labels:
+                    concatenated_labels = ''.join(all_labels)
+                    st.subheader("Voice of the Mind")
+                    st.write(concatenated_labels)
+                    text_to_speech(concatenated_labels)
 
 # Show content based on selected page
 if page == "About Us":
@@ -78,23 +211,23 @@ elif page == "FAQ & Resources":
     with faq_expander:
         st.markdown("""
         **Q: What is BrainTalk?**  
-        A: BrainTalk is an application that converts EEG brainwave data into spoken words, designed to help individuals with speech impairments communicate.
+        A: BrainTalk converts EEG brainwave data into spoken words, helping individuals with speech impairments communicate.
         
         **Q: How accurate is the EEG to text conversion?**  
-        A: The accuracy depends on the quality of the EEG data and the individual user. Our model has been trained on diverse datasets, but results may vary.
+        A: Accuracy depends on EEG data quality and individual users. Our model is trained on diverse datasets, but results may vary.
         
         **Q: Is my data secure?**  
-        A: Yes, all processing happens locally on your device. We don't store your EEG data on our servers.
+        A: Yes, all processing happens locally on your device. We don't store your EEG data.
         """)
     
     als_expander = st.expander("For ALS Patients and Caregivers")
     with als_expander:
         st.markdown("""
         **Q: How can ALS patients benefit from BrainTalk?**  
-        A: BrainTalk provides a non-invasive way for ALS patients to communicate as their condition progresses, using only their brain activity.
+        A: BrainTalk provides a non-invasive communication method for ALS patients as their condition progresses.
         
         **Q: What equipment do I need?**  
-        A: You'll need an EEG headset that can export data in EDF format. Consult with your healthcare provider for recommendations.
+        A: You'll need an EEG headset that exports data in EDF format. Consult your healthcare provider for recommendations.
         """)
     
     resources_expander = st.expander("Helpful Resources")
@@ -116,133 +249,5 @@ elif page == "FAQ & Resources":
     st.markdown("---")
     st.markdown("Have more questions? Contact us at support@braintalk.example.com")
 
-# Home page content will be shown by default
-
-def load_model():
-    try:
-        model_path = Path(__file__).parent / "best_XGBoost_reg"
-        #st.write(f"Checking model path: {model_path}")
-
-        if not model_path.exists():
-            st.error(f"Model file does not exist at: {model_path}")
-            return None
-
-        if not os.access(str(model_path), os.R_OK):
-            st.error(f"No read permission for the file: {model_path}")
-            return None
-
-        model = joblib.load(str(model_path))
-        #st.success("Model loaded successfully.")
-        return model
-    except Exception as e:
-        st.error(f"Error loading model: {e}")
-        return None
-
-def extract_eeg_features(edf_path):
-    raw = mne.io.read_raw_edf(edf_path, preload=True)
-    data, times = raw.get_data(return_times=True)
-    df_list = []
-
-    for i, channel_name in enumerate(raw.ch_names):
-        df = pd.DataFrame({
-            'id': i,
-            'time': times,
-            'value': data[i]
-        })
-        df_list.append(df)
-
-    full_df = pd.concat(df_list, ignore_index=True)
-    extracted_features = extract_features(full_df, column_id='id', column_sort='time', column_value='value')
-    extracted_features = impute(extracted_features)
-
-    return extracted_features
-
-def text_to_speech(text):
-    try:
-        # Convert text to speech
-        tts = gTTS(text=text, lang='en')
-
-        # Save to a bytes buffer
-        audio_buffer = BytesIO()
-        tts.write_to_fp(audio_buffer)
-
-        # Reset buffer position to start
-        audio_buffer.seek(0)
-
-        # Play the audio using Streamlit
-        st.audio(audio_buffer, format="audio/mp3")
-
-    except Exception as e:
-        st.error(f"An error occurred: {e}")
-
-def main():
-    # web app
-    st.title("BrainTalk")
-
-    # Upload multiple EDF files
-    st.subheader("Upload your EEG data")
-    uploaded_files = st.file_uploader("Upload EEG EDF files (select in desired order)", type="edf", accept_multiple_files=True)
-    
-    # Sample EDF files download section
-    st.subheader("Or download sample EDF files")
-    st.write("Click on the buttons below to download sample EDF files for testing:")
-    
-    # Dictionary of sample EDF files with their Google Drive links
-    edf_links = {
-        'A': 'https://drive.google.com/file/d/1ckD6gt7Z_Lkttg6kUv90ZbLQlanLP6NA/view?usp=drive_link',
-        'C': 'https://drive.google.com/file/d/1otwd0q5RWLbZZSW3BT7Fnt06cdMZO9FA/view?usp=drive_link',
-        'F': 'https://drive.google.com/file/d/1TGfrtfbLxvOlhQZrN-quUQmyP30X2rMh/view?usp=drive_link',
-        'H': 'https://drive.google.com/file/d/1MGTMQTeZXIvWEwrZM5GOoc0tlA-Ahqsg/view?usp=drive_link',
-        'J': 'https://drive.google.com/file/d/1revVfd-cHpLdvvyogTQdBGaNaosYUDpV/view?usp=drive_link',
-        'M': 'https://drive.google.com/file/d/1tc4Bv1Si11FFI_KsGWOnqTXvO6GEll61/view?usp=drive_link',
-        'P': 'https://drive.google.com/file/d/1ODZ0mc2LdHAG-BtmPYx8gyAasuhLlJN-/view?usp=drive_link',
-        'S': 'https://drive.google.com/file/d/1PsHjwSRjchDysKEpMv4QCH7VF6VuQkR6/view?usp=drive_link',
-        'T': 'https://drive.google.com/file/d/1lPiy9bhZ9bSQcW75wlZl6WUNEU9yH8Cw/view?usp=drive_link',
-        'Y': 'https://drive.google.com/file/d/1rlFXtwMHK1tJjsetPfFa42cVo0xMn1ea/view?usp=drive_link'
-    }
-    
-    
-    # Create a row of download buttons
-    cols = st.columns(5)  # 5 columns for better layout
-    for i, (letter, url) in enumerate(edf_links.items()):
-        with cols[i % 5]:
-            st.download_button(
-                label=f"Download '{letter}' EDF",
-                data=url,
-                file_name=f"sample_{letter}.edf",
-                mime="application/octet-stream",
-                use_container_width=True
-            )
-    
-    st.markdown("---")
-    text = ''
-    # Load the model
-    model = load_model()
-    # Check if there are any uploaded files
-    if uploaded_files:
-        if st.button("Express Waves"):
-            label_mapping = {0: 'A', 1: 'C', 2: 'F', 3: 'H', 4: 'J', 5: 'M', 6: 'P', 7: 'S', 8: 'T', 9: 'Y'}
-            all_labels = []
-
-            for i, uploaded_file in enumerate(uploaded_files):
-                with open(f"temp_{i}.edf", "wb") as f:
-                    f.write(uploaded_file.getbuffer())
-
-                features_df = extract_eeg_features(f"temp_{i}.edf")
-                class_indices = model.predict(features_df)
-                unique, counts = np.unique(class_indices, return_counts=True)
-                most_common_index = np.argmax(counts)
-                most_common_element = unique[most_common_index]
-                actual_label = label_mapping[most_common_element]
-                all_labels.append(actual_label)
-
-            concatenated_labels = ''.join(all_labels)
-            st.subheader("Voice of the Mind")
-            st.write(concatenated_labels)
-            text = concatenated_labels
-        #st.write(text)
-        if text:
-            text_to_speech(text)
-
-if __name__ == "__main__":
-    main()
+else:  # Home page
+    show_home_page()
