@@ -77,28 +77,47 @@ def text_to_speech(text):
 
 def download_edf_file(url, filename):
     try:
-        response = requests.get(url, stream=True)
+        # Create a session to handle cookies
+        session = requests.Session()
+        
+        # First request to get the confirmation token
+        response = session.get(url, stream=True, timeout=10)
         response.raise_for_status()
+        
+        # Save the content to a file
         with open(filename, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):
-                f.write(chunk)
-        return True
+                if chunk:  # filter out keep-alive new chunks
+                    f.write(chunk)
+        
+        # Verify the file was downloaded and has content
+        if os.path.getsize(filename) > 0:
+            # Try to read the file to verify it's a valid EDF
+            try:
+                raw = mne.io.read_raw_edf(filename, preload=False, verbose=False)
+                return True
+            except Exception as e:
+                st.error(f"Invalid EDF file: {e}")
+                os.remove(filename)  # Remove invalid file
+                return False
+        else:
+            st.error("Downloaded file is empty")
+            return False
+            
     except Exception as e:
-        st.error(f"Error downloading {filename}: {e}")
+        st.error(f"Error downloading {filename}: {str(e)}")
+        if os.path.exists(filename):
+            os.remove(filename)  # Clean up if file was partially downloaded
         return False
 
 def show_home_page():
     st.title("BrainTalk")
     
-    # Upload multiple EDF files
-    st.subheader("1. Upload your EEG data")
-    uploaded_files = st.file_uploader("Select EDF files (in desired order)", 
-                                    type="edf", 
-                                    accept_multiple_files=True,
-                                    key="file_uploader")
+    # Create a directory for downloaded files if it doesn't exist
+    os.makedirs("downloaded_edf", exist_ok=True)
     
     # Sample EDF files download section
-    st.subheader("2. Or download sample EDF files")
+    st.subheader("Download sample EDF files")
     st.write("Click on the buttons below to download sample EDF files for testing:")
     
     # Dictionary of sample EDF files with their Google Drive links
@@ -122,52 +141,29 @@ def show_home_page():
             if st.button(f"Download '{letter}'", 
                         key=f"btn_{letter}",
                         use_container_width=True):
+                filename = os.path.join("downloaded_edf", f"sample_{letter}.edf")
                 with st.spinner(f"Downloading {letter}.edf..."):
-                    if download_edf_file(url, f"sample_{letter}.edf"):
-                        st.success(f"Downloaded sample_{letter}.edf")
+                    if download_edf_file(url, filename):
+                        st.success(f"Downloaded {os.path.basename(filename)}")
+                        # Create a download button for the downloaded file
+                        with open(filename, "rb") as f:
+                            st.download_button(
+                                label=f"Save {letter}.edf",
+                                data=f,
+                                file_name=f"sample_{letter}.edf",
+                                mime="application/octet-stream",
+                                key=f"dl_{letter}"
+                            )
                     else:
-                        st.error("Download failed")
+                        st.error("Download failed. Please try again.")
+    # Upload multiple EDF files
+    st.subheader("Upload your EEG data")
+    uploaded_files = st.file_uploader("Select EDF files (in desired order)", 
+                                    type="edf", 
+                                    accept_multiple_files=True,
+                                    key="file_uploader")
     
-    st.markdown("---")
-    
-    # Load the model
-    model = load_model()
-    
-    # Process uploaded files
-    if uploaded_files:
-        if st.button("Process EEG Data", type="primary"):
-            with st.spinner("Processing EEG data..."):
-                label_mapping = {0: 'A', 1: 'C', 2: 'F', 3: 'H', 4: 'J', 
-                                5: 'M', 6: 'P', 7: 'S', 8: 'T', 9: 'Y'}
-                all_labels = []
-
-                for i, uploaded_file in enumerate(uploaded_files):
-                    # Save the uploaded file
-                    with open(f"temp_{i}.edf", "wb") as f:
-                        f.write(uploaded_file.getbuffer())
-                    
-                    try:
-                        features_df = extract_eeg_features(f"temp_{i}.edf")
-                        class_indices = model.predict(features_df)
-                        unique, counts = np.unique(class_indices, return_counts=True)
-                        most_common_index = np.argmax(counts)
-                        most_common_element = unique[most_common_index]
-                        all_labels.append(label_mapping[most_common_element])
-                        
-                        # Clean up the temporary file
-                        os.remove(f"temp_{i}.edf")
-                        
-                    except Exception as e:
-                        st.error(f"Error processing file {uploaded_file.name}: {str(e)}")
-                        continue
-
-                if all_labels:
-                    concatenated_labels = ''.join(all_labels)
-                    st.subheader("Voice of the Mind")
-                    st.write(concatenated_labels)
-                    text_to_speech(concatenated_labels)
-
-# Show content based on selected page
+    # Show content based on selected page
 if page == "About Us":
     st.title("About BrainTalk")
     st.markdown("""
