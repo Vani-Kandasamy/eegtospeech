@@ -162,6 +162,44 @@ def show_home_page():
                                     type="edf", 
                                     accept_multiple_files=True,
                                     key="file_uploader")
+    st.markdown("---")
+    
+    # Load the model
+    model = load_model()
+    
+    # Process uploaded files
+    if uploaded_files:
+        if st.button("Process EEG Data", type="primary"):
+            with st.spinner("Processing EEG data..."):
+                label_mapping = {0: 'A', 1: 'C', 2: 'F', 3: 'H', 4: 'J', 
+                                5: 'M', 6: 'P', 7: 'S', 8: 'T', 9: 'Y'}
+                all_labels = []
+
+                for i, uploaded_file in enumerate(uploaded_files):
+                    # Save the uploaded file
+                    with open(f"temp_{i}.edf", "wb") as f:
+                        f.write(uploaded_file.getbuffer())
+                    
+                    try:
+                        features_df = extract_eeg_features(f"temp_{i}.edf")
+                        class_indices = model.predict(features_df)
+                        unique, counts = np.unique(class_indices, return_counts=True)
+                        most_common_index = np.argmax(counts)
+                        most_common_element = unique[most_common_index]
+                        all_labels.append(label_mapping[most_common_element])
+                        
+                        # Clean up the temporary file
+                        os.remove(f"temp_{i}.edf")
+                        
+                    except Exception as e:
+                        st.error(f"Error processing file {uploaded_file.name}: {str(e)}")
+                        continue
+
+                if all_labels:
+                    concatenated_labels = ''.join(all_labels)
+                    st.subheader("Voice of the Mind")
+                    st.write(concatenated_labels)
+                    text_to_speech(concatenated_labels)
     
     # Show content based on selected page
 if page == "About Us":
