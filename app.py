@@ -258,6 +258,20 @@ def show_about_page():
     BrainTalk's mission is to provide a voice to those who have lost the ability to speak 
     due to neurological conditions, using cutting-edge EEG technology and machine learning.
     
+    ### Key Features
+    - **EEG to Text Conversion**: Upload EEG data in EDF format to convert brain signals into text
+    - **Text to Speech**: Hear the converted text with our built-in speech synthesis
+    - **User-Friendly Interface**: Simple and intuitive design for ease of use
+    - **Privacy-Focused**: Your data stays on your device and is not stored on our servers
+    
+    ### Who Can Benefit
+    - Individuals with ALS (Amyotrophic Lateral Sclerosis)
+    - Patients with locked-in syndrome
+    - People with speech disorders
+    - Stroke survivors with speech impairments
+    - Researchers in the field of Brain-Computer Interfaces (BCI)
+    - Healthcare professionals working with non-verbal patients
+    
     ## How It Works
     
     1. **EEG Data Collection**: Brain signals are recorded using non-invasive EEG headsets
@@ -271,27 +285,44 @@ def show_about_page():
 def show_faq_page():
     st.title("Frequently Asked Questions")
     
-    st.markdown("""
-    ### General Questions
+    faq_expander = st.expander("General Questions", expanded=True)
+    with faq_expander:
+        st.markdown("""
+        **Q: What is BrainTalk?**  
+        A: BrainTalk converts EEG brainwave data into spoken words, helping individuals with speech impairments communicate.
+        
+        **Q: How accurate is the EEG to text conversion?**  
+        A: Accuracy depends on EEG data quality and individual users. Our model is trained on diverse datasets, but results may vary.
+        
+        **Q: Is my data secure?**  
+        A: Yes, all processing happens locally on your device. We don't store your EEG data.
+        """)
     
-    **Q: What is BrainTalk?**  
-    A: BrainTalk is an application that converts EEG brainwave data into spoken words.
+    als_expander = st.expander("For ALS Patients and Caregivers")
+    with als_expander:
+        st.markdown("""
+        **Q: How can ALS patients benefit from BrainTalk?**  
+        A: BrainTalk provides a non-invasive communication method for ALS patients as their condition progresses.
+        
+        **Q: What equipment do I need?**  
+        A: You'll need an EEG headset that exports data in EDF format. Consult your healthcare provider for recommendations.
+        """)
     
-    **Q: Who can benefit from BrainTalk?**  
-    A: Individuals with ALS, locked-in syndrome, stroke survivors, and others with speech impairments.
-    
-    **Q: Is my data secure?**  
-    A: Yes, all processing happens locally on your device. We don't store your EEG data.
-    
-    ### Technical Questions
-    
-    **Q: What file formats are supported?**  
-    A: Currently, we support EDF (European Data Format) files.
-    
-    **Q: Do I need special hardware?**  
-    A: You'll need an EEG headset that can export data in EDF format.
-    """)
-
+    resources_expander = st.expander("Helpful Resources")
+    with resources_expander:
+        st.markdown("""
+        ### Community Forums and Support Groups
+        - [ALS Association Discussion Forums](https://www.als.org/community/discussion-forums)
+        - [ALS Forums](https://www.alsforums.com/)
+        - [Brain-Computer Interface Community](https://www.bci-info.org/)
+        - [Reddit r/ALS](https://www.reddit.com/r/ALS/)
+        - [Reddit r/BCI](https://www.reddit.com/r/BCI/)
+        
+        ### Research and Information
+        - [ALS Association](https://www.als.org/)
+        - [International Brain-Computer Interface Society](http://bcisociety.org/)
+        - [National Institute of Neurological Disorders and Stroke](https://www.ninds.nih.gov/)
+        """)
 # Update the main function to include the new page
 def main():
     init_session_state()
