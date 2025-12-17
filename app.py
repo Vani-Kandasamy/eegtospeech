@@ -173,21 +173,42 @@ def show_sample_files_page():
         "Y": "https://drive.google.com/uc?export=download&id=1rlFXtwMHK1tJjsetPfFa42cVo0xMn1ea"
     }
     
+    # Initialize session state for selection order if it doesn't exist
+    if 'selection_order' not in st.session_state:
+        st.session_state.selection_order = {}
+    if 'selected_letters' not in st.session_state:
+        st.session_state.selected_letters = []
+    
     # Display sample files with checkboxes
     st.subheader("Available Sample Files")
-    selected_letters = []
-    selection_order = {}
     cols = st.columns(5)
+    
+    # Reset selection if needed
+    if st.button('Clear Selection'):
+        st.session_state.selection_order = {}
+        st.session_state.selected_letters = []
+    
+    # Track current selections
+    current_selections = []
     
     for i, (letter, url) in enumerate(sample_files.items()):
         with cols[i % 5]:
-            if st.checkbox(f"Letter '{letter}'", key=f"cb_{letter}"):
-                if letter not in selection_order:
-                    selection_order[letter] = len(selection_order)
-                selected_letters.append((letter, url))
+            # Check if this letter is being selected or deselected
+            is_checked = st.checkbox(f"Letter '{letter}'", key=f"cb_{letter}", 
+                                   value=letter in [l for l, _ in st.session_state.selected_letters])
+            
+            if is_checked:
+                current_selections.append((letter, url))
+                # Update selection order if this is a new selection
+                if letter not in st.session_state.selection_order:
+                    st.session_state.selection_order[letter] = len(st.session_state.selection_order)
+    
+    # Update selected letters in session state
+    st.session_state.selected_letters = current_selections
     
     # Sort selected_letters based on the order of selection
-    selected_letters.sort(key=lambda x: selection_order[x[0]])
+    selected_letters = sorted(st.session_state.selected_letters, 
+                             key=lambda x: st.session_state.selection_order.get(x[0], float('inf')))
     
     # Process selected files
     if selected_letters and st.button("Process Selected Files", type="primary"):
