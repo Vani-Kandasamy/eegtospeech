@@ -91,7 +91,6 @@ def process_edf_file(uploaded_file, model, label_mapping):
         st.error(f"Error processing {uploaded_file.name}: {str(e)}")
         return None, False
 
-# Remove the sample files section from show_home_page and update it to:
 def show_home_page():
     st.title("BrainTalk - EEG to Speech Conversion")
     st.image(IMAGE_ADDRESS, use_column_width=True)
@@ -103,7 +102,7 @@ def show_home_page():
     The app will process them sequentially and combine the results.
     """)
     
-    # File uploader - now accepts multiple files
+    # File uploader - accepts multiple files
     uploaded_files = st.file_uploader(
         "Select EDF files (in order)", 
         type=["edf"],
