@@ -176,12 +176,18 @@ def show_sample_files_page():
     # Display sample files with checkboxes
     st.subheader("Available Sample Files")
     selected_letters = []
+    selection_order = {}
     cols = st.columns(5)
     
     for i, (letter, url) in enumerate(sample_files.items()):
         with cols[i % 5]:
             if st.checkbox(f"Letter '{letter}'", key=f"cb_{letter}"):
+                if letter not in selection_order:
+                    selection_order[letter] = len(selection_order)
                 selected_letters.append((letter, url))
+    
+    # Sort selected_letters based on the order of selection
+    selected_letters.sort(key=lambda x: selection_order[x[0]])
     
     # Process selected files
     if selected_letters and st.button("Process Selected Files", type="primary"):
@@ -248,6 +254,7 @@ def show_sample_files_page():
                 text_to_speech(predicted_word)
             else:
                 st.warning("No valid predictions were made from the selected files.")
+
 
 # About Page
 def show_about_page():
