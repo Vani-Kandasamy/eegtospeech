@@ -357,23 +357,21 @@ def show_faq_page():
 def main():
     init_session_state()
     
-    # Sidebar Navigation with buttons
+    # Sidebar Navigation with buttons in single column
     st.sidebar.title("Navigation")
     
-    # Create columns for better button layout
-    col1, col2 = st.sidebar.columns(2)
+    # Single column layout for navigation buttons
+    if st.sidebar.button("🏠 Home", use_container_width=True):
+        st.session_state.page = 'home'
     
-    with col1:
-        if st.button("🏠 Home"):
-            st.session_state.page = 'home'
-        if st.button("❓ FAQ"):
-            st.session_state.page = 'faq'
+    if st.sidebar.button("📁 Sample Files", use_container_width=True):
+        st.session_state.page = 'sample_files'
     
-    with col2:
-        if st.button("📁 Sample Files"):
-            st.session_state.page = 'sample_files'
-        if st.button("ℹ️ About"):
-            st.session_state.page = 'about'
+    if st.sidebar.button("ℹ️ About", use_container_width=True):
+        st.session_state.page = 'about'
+        
+    if st.sidebar.button("❓ FAQ", use_container_width=True):
+        st.session_state.page = 'faq'
     
     # Add some space
     st.sidebar.markdown("---")
