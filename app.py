@@ -59,10 +59,19 @@ def text_to_speech(text):
         # Convert text to lowercase for more natural pronunciation
         text = text.lower()
         tts = gTTS(text=text, lang='en')
-        audio_buffer = BytesIO()
-        tts.write_to_fp(audio_buffer)
-        audio_buffer.seek(0)
-        st.audio(audio_buffer, format="audio/mp3")
+        
+        # Save to a temporary file
+        temp_file = "temp_audio.mp3"
+        tts.save(temp_file)
+        
+        # Play the audio
+        audio_bytes = open(temp_file, 'rb').read()
+        st.audio(audio_bytes, format='audio/mp3')
+        
+        # Clean up
+        if os.path.exists(temp_file):
+            os.remove(temp_file)
+            
     except Exception as e:
         st.error(f"Error in text-to-speech: {e}")
 
@@ -241,7 +250,8 @@ def show_sample_files_page():
     if st.session_state.predicted_word:
         st.subheader("Previous Prediction")
         st.markdown(f"## {st.session_state.predicted_word}")
-        st.audio("output.mp3", format="audio/mp3")
+        # Remove the st.audio line since we'll handle it in text_to_speech
+        text_to_speech(st.session_state.predicted_word)
 
 def process_selected_files(selected_letters):
     """Process the selected EDF files and update the UI with results."""
@@ -288,10 +298,13 @@ def process_selected_files(selected_letters):
     # Update UI with results
     if predicted_chars:
         st.session_state.predicted_word = ''.join(predicted_chars)
+        st.success("Processing complete!")
+        st.subheader("Predicted Word")
+        st.markdown(f"## {st.session_state.predicted_word}")
+        
+        # Generate and play audio
+        st.subheader("Listen to the result")
         text_to_speech(st.session_state.predicted_word)
-        st.rerun()
-            
-
 
 # About Page
 def show_about_page():
