@@ -357,18 +357,35 @@ def show_faq_page():
 def main():
     init_session_state()
     
-    # Sidebar Navigation
+    # Sidebar Navigation with buttons
     st.sidebar.title("Navigation")
-    page = st.sidebar.radio("", ["Home", "Sample Files", "About", "FAQ"])
+    
+    # Create columns for better button layout
+    col1, col2 = st.sidebar.columns(2)
+    
+    with col1:
+        if st.button("🏠 Home"):
+            st.session_state.page = 'home'
+        if st.button("❓ FAQ"):
+            st.session_state.page = 'faq'
+    
+    with col2:
+        if st.button("📁 Sample Files"):
+            st.session_state.page = 'sample_files'
+        if st.button("ℹ️ About"):
+            st.session_state.page = 'about'
+    
+    # Add some space
+    st.sidebar.markdown("---")
     
     # Page Routing
-    if page == "Home":
+    if st.session_state.page == 'home' or 'page' not in st.session_state:
         show_home_page()
-    elif page == "Sample Files":
+    elif st.session_state.page == 'sample_files':
         show_sample_files_page()
-    elif page == "About":
+    elif st.session_state.page == 'about':
         show_about_page()
-    elif page == "FAQ":
+    elif st.session_state.page == 'faq':
         show_faq_page()
 
 if __name__ == "__main__":
