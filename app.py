@@ -175,45 +175,67 @@ def show_sample_files_page():
         "Y": "https://drive.google.com/uc?export=download&id=1rlFXtwMHK1tJjsetPfFa42cVo0xMn1ea"
     }
     
-    # Initialize session state for selection order if it doesn't exist
+    # Initialize session state for selection order and selected letters
     if 'selection_order' not in st.session_state:
         st.session_state.selection_order = {}
     if 'selected_letters' not in st.session_state:
         st.session_state.selected_letters = []
     
-    # Display sample files with checkboxes
+    # Display sample files with buttons
     st.subheader("Available Sample Files")
-    cols = st.columns(5)
     
     # Reset selection if needed
-    if st.button('Clear Selection'):
+    if st.button('Clear Selection', key='clear_btn'):
         st.session_state.selection_order = {}
         st.session_state.selected_letters = []
+        st.experimental_rerun()
+    
+    # Create buttons in a grid layout
+    cols = st.columns(5)  # 5 columns for the buttons
     
     # Track current selections
     current_selections = []
     
     for i, (letter, url) in enumerate(sample_files.items()):
         with cols[i % 5]:
-            # Check if this letter is being selected or deselected
-            is_checked = st.checkbox(f"Letter '{letter}'", key=f"cb_{letter}", 
-                                   value=letter in [l for l, _ in st.session_state.selected_letters])
-            
-            if is_checked:
-                current_selections.append((letter, url))
-                # Update selection order if this is a new selection
-                if letter not in st.session_state.selection_order:
+            # Create a button for each letter
+            if st.button(letter, key=f"btn_{letter}"):
+                # Toggle selection
+                if letter in [l for l, _ in st.session_state.selected_letters]:
+                    # If already selected, remove it
+                    st.session_state.selected_letters = [(l, u) for l, u in st.session_state.selected_letters if l != letter]
+                    if letter in st.session_state.selection_order:
+                        del st.session_state.selection_order[letter]
+                else:
+                    # If not selected, add it
+                    st.session_state.selected_letters.append((letter, url))
                     st.session_state.selection_order[letter] = len(st.session_state.selection_order)
+                st.experimental_rerun()
+            
+            # Highlight selected buttons
+            if letter in [l for l, _ in st.session_state.selected_letters]:
+                st.markdown("""
+                <style>
+                    div[data-testid*="%s"] button {
+                        background-color: #4CAF50;
+                        color: white;
+                        border: 2px solid #45a049;
+                    }
+                </style>
+                """ % f"btn_{letter}", unsafe_allow_html=True)
     
-    # Update selected letters in session state
-    st.session_state.selected_letters = current_selections
+    # Get the current selected letters in order
+    selected_letters = [(l, u) for l, u in st.session_state.selected_letters 
+                       if l in st.session_state.selection_order]
+    selected_letters.sort(key=lambda x: st.session_state.selection_order[x[0]])
     
-    # Sort selected_letters based on the order of selection
-    selected_letters = sorted(st.session_state.selected_letters, 
-                             key=lambda x: st.session_state.selection_order.get(x[0], float('inf')))
+    # Show selected letters
+    if selected_letters:
+        st.subheader("Selected Files (in order)")
+        st.write(" ".join([l for l, _ in selected_letters]))
     
     # Process selected files
-    if selected_letters and st.button("Process Selected Files", type="primary"):
+    if selected_letters and st.button("Process Selected Files", type="primary", key="process_btn"):
         with st.spinner("Processing selected files..."):
             # Load model and label mapping
             model = load_model()
