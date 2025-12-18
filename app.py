@@ -56,13 +56,15 @@ def extract_eeg_features(edf_path):
 # Convert text to speech
 def text_to_speech(text):
     try:
+        # Convert text to lowercase for more natural pronunciation
+        text = text.lower()
         tts = gTTS(text=text, lang='en')
         audio_buffer = BytesIO()
         tts.write_to_fp(audio_buffer)
         audio_buffer.seek(0)
         st.audio(audio_buffer, format="audio/mp3")
     except Exception as e:
-        st.error(f"Error generating speech: {str(e)}")
+        st.error(f"Error in text-to-speech: {e}")
 
 def process_edf_file(uploaded_file, model, label_mapping):
     """Process a single EDF file and return the predicted character."""
