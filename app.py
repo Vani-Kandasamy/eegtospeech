@@ -189,8 +189,6 @@ def show_sample_files_page():
         st.session_state.selection_order = {}
     if 'selected_letters' not in st.session_state:
         st.session_state.selected_letters = []
-    if 'predicted_word' not in st.session_state:
-        st.session_state.predicted_word = ""
     
     # Display sample files with buttons
     st.subheader("Available Sample Files")
@@ -199,7 +197,6 @@ def show_sample_files_page():
     if st.button('Clear Selection', key='clear_btn'):
         st.session_state.selection_order = {}
         st.session_state.selected_letters = []
-        st.session_state.predicted_word = ""
         st.rerun()
     
     # Create buttons in a grid layout
@@ -245,13 +242,6 @@ def show_sample_files_page():
         if st.button("Process Selected Files", type="primary", key="process_btn"):
             with st.spinner("Processing files..."):
                 process_selected_files(selected_letters)
-    
-    # Display previous prediction if exists
-    if st.session_state.predicted_word:
-        st.subheader("Previous Prediction")
-        st.markdown(f"## {st.session_state.predicted_word}")
-        # Remove the st.audio line since we'll handle it in text_to_speech
-        text_to_speech(st.session_state.predicted_word)
 
 def process_selected_files(selected_letters):
     """Process the selected EDF files and update the UI with results."""
